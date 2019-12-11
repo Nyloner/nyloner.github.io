@@ -95,12 +95,12 @@
 
 <div class="post animated fadeInDown">
   <div class="post_title">
-    <h2><a href='/posts/2017_12_11_1/'>Docker的简单使用</a></h2>
+    <h2><a href='/posts/2016_09_03_1/'>PIL生成验证码</a></h2>
   </div>
   
   <div class="list">
     <div class="post_content markdown">
-      <p>安装Docker 详见Docker官网：https://www.docker.com/ Preparing Dockerfile 创建Dockerfile文件，修改username和userpasswd写入： # setting base image FROM ubuntu:17.10 # new a directory for sshd to run RUN mkdir -p......</p>
+      <p>为了防止程序恶意请求，使用图片验证码是最常见的手段。 PIL PIL是一个Python中一个非常强大的图像处理库，这里我们使用PIL来生成图片验证码 安装PIL pip install Pillow Windows下可以直接到官网下载exe安装......</p>
     </div>
   </div>
   
@@ -109,103 +109,7 @@
       <div class="info">
         <span class="field">
           <i class="remixicon-map-pin-time-line"></i>
-          <span class="date">2017.12.11</span>
-        </span>
-        
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="post animated fadeInDown">
-  <div class="post_title">
-    <h2><a href='/posts/2017_12_10_1/'>将Shadowsocks Socks5代理转为HTTP代理</a></h2>
-  </div>
-  
-  <div class="list">
-    <div class="post_content markdown">
-      <p>部分shell程序无法使用socks5代理，通过polipo可将socks5代理转为HTTP代理 Install For Mac: brew install polipo For Linux: apt-get install polipo Usage 例如Shadowsocks默认代理端口为1080，可通过以下命令使用，默认监听端......</p>
-    </div>
-  </div>
-  
-  <div class="post_footer">
-    <div class="meta">
-      <div class="info">
-        <span class="field">
-          <i class="remixicon-map-pin-time-line"></i>
-          <span class="date">2017.12.10</span>
-        </span>
-        
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="post animated fadeInDown">
-  <div class="post_title">
-    <h2><a href='/posts/2017_10_12_1/'>相似图片搜索(pHash,dHash)</a></h2>
-  </div>
-  
-  <div class="list">
-    <div class="post_content markdown">
-      <p>基于感知哈希算法，对每张图片生成一个“指纹”字符串，再比较图片的指纹，指纹越接近则说明图片越相似。 1.计算指纹信息 直接利用的Python的imagehash库，该库包含了一些指纹计算的方法，直接调用即......</p>
-    </div>
-  </div>
-  
-  <div class="post_footer">
-    <div class="meta">
-      <div class="info">
-        <span class="field">
-          <i class="remixicon-map-pin-time-line"></i>
-          <span class="date">2017.10.12</span>
-        </span>
-        
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="post animated fadeInDown">
-  <div class="post_title">
-    <h2><a href='/posts/2016_12_12_1/'>C语言实现一个简单的HTTP Server</a></h2>
-  </div>
-  
-  <div class="list">
-    <div class="post_content markdown">
-      <p>监听HTTP请求并解析报文,实现一个HelloWorld。 1.实现 server.h #include &lt;stdio.h&gt;#include &lt;sys/types.h&gt;#include &lt;pthread.h&gt;#include &lt;sys/socket.h&gt;#include &lt;arpa/inet.h&gt;#include &lt;netinet/in.h&gt;#include &lt;stdlib.h&gt;#include &lt;string.h&gt;#include &lt;unistd.h&gt;#include &lt;stdarg.h&gt;#include &lt;signal.h&gt; #define SERVER_PORT 8000 struct SocketArg { intptr_t client_sock; char * ip_address; }; struct KeyValue { char *name; char *value; struct KeyValue *next; }; struct Request { int client; char method[5]; char path[80]; struct KeyValue *post_arg; struct KeyValue *request_arg; struct KeyValue *headers; }; void init_server(); void parser_request(void *arg); int get_line(int client,char *buf,int size); struct KeyValue......</p>
-    </div>
-  </div>
-  
-  <div class="post_footer">
-    <div class="meta">
-      <div class="info">
-        <span class="field">
-          <i class="remixicon-map-pin-time-line"></i>
-          <span class="date">2016.12.12</span>
-        </span>
-        
-      </div>
-    </div>
-  </div>
-</div>
-
-<div class="post animated fadeInDown">
-  <div class="post_title">
-    <h2><a href='/posts/2016_09_12_1/'>Python编写自己的抓包工具</a></h2>
-  </div>
-  
-  <div class="list">
-    <div class="post_content markdown">
-      <p>1.安装scapy Scapy的是一个强大的交互式数据包处理程序（使用python编写）。它能够伪造或者解码大量的网络协议数据包，能够发送、捕捉、匹配请求和回复包等等。它可以很容易地处理一些典型操作，比......</p>
-    </div>
-  </div>
-  
-  <div class="post_footer">
-    <div class="meta">
-      <div class="info">
-        <span class="field">
-          <i class="remixicon-map-pin-time-line"></i>
-          <span class="date">2016.09.12</span>
+          <span class="date">2016.09.03</span>
         </span>
         
       </div>
@@ -217,10 +121,10 @@
 <div class="pagination">
   
   
-  
-  <a href="/page/2/" class="next">
-    阅读更多文章
+  <a href="/" class="pre">
+    返回上一页
   </a>
+  
   
   
 </div>
