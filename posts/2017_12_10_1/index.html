@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-cn" >
 <head>
-	<meta name="generator" content="Hugo 0.62.0-DEV" />
   <meta charset="utf-8"/>
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
@@ -11,6 +10,8 @@
         content="nyloner"/>
 
   
+  <meta name="description" content="部分shell程序无法使用socks5代理，通过polipo可将socks5代理转为HTTP代理 Install For Mac: brew install polipo For Linux: apt-get install polipo Usage 例如Shadowsocks默认代理端口为1080，可通过以下命令使用，默认监听端"/>
+  
 
   
   
@@ -18,13 +19,11 @@
   
 
   
-  <link rel="canonical" href="https://nyloner.github.io/"/>
+  <link rel="canonical" href="https://nyloner.github.io/posts/2017_12_10_1/"/>
 
   
-  <link rel="alternate" type="application/rss&#43;xml" href="https://nyloner.github.io/index.xml">
-  
 
-  <title>零度</title>
+  <title>将Shadowsocks Socks5代理转为HTTP代理 &middot; 零度</title>
 
   <link rel="shortcut icon" href="https://nyloner.github.io/images/favicon.ico"/>
   <link rel="stylesheet" href="https://nyloner.github.io/css/animate.min.css"/>
@@ -90,39 +89,34 @@
 </div>
 
   <div class="content">
-    
-
-
-<div class="post animated fadeInDown">
-  <div class="post_title">
-    <h2><a href='/posts/'>Posts</a></h2>
-  </div>
-  
-  <div class="list">
-    <div class="post_content markdown">
-      <p>......</p>
-    </div>
-  </div>
-  
-  <div class="post_footer">
-    <div class="meta">
-      <div class="info">
-        <span class="field">
-          <i class="remixicon-map-pin-time-line"></i>
-          <span class="date">2017.12.11</span>
-        </span>
-        
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/2017_12_10_1/'>将Shadowsocks Socks5代理转为HTTP代理</a></h2>
+          <span class="date">2017.12.10</span>
+        </div>
+        <div class="post_content markdown"><p>部分shell程序无法使用<code>socks5</code>代理，通过polipo可将<code>socks5</code>代理转为HTTP代理</p>
+<h2 id="install">Install</h2>
+<p>For Mac:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">brew install polipo
+</code></pre></div><p>For Linux:</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">apt-get install polipo
+</code></pre></div><h2 id="usage">Usage</h2>
+<p>例如Shadowsocks默认代理端口为<code>1080</code>，可通过以下命令使用，默认监听端口<code>8123</code></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">polipo socksParentProxy<span style="color:#f92672">=</span>localhost:1080
+</code></pre></div><p>命令行中使用代理：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-shell" data-lang="shell">export http_proxy<span style="color:#f92672">=</span>http://127.0.0.1:8123
+export https_proxy<span style="color:#f92672">=</span>http://127.0.0.1:8123
+</code></pre></div></div>
+        <div class="post_footer">
+          
+        </div>
       </div>
+      
+      
     </div>
   </div>
-</div>
-
-
-<div class="pagination">
-  
-</div>
-
-  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
 </div>
 <footer class="footer">
   <div class="powered_by">

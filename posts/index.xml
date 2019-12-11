@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>零度</title>
-    <link>https://nyloner.github.io/</link>
-    <description>Recent content on 零度</description>
+    <title>Posts on 零度</title>
+    <link>https://nyloner.github.io/posts/</link>
+    <description>Recent content in Posts on 零度</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <lastBuildDate>Mon, 11 Dec 2017 22:48:40 +0800</lastBuildDate>
     
-	<atom:link href="https://nyloner.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://nyloner.github.io/posts/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="nyloner"/>
+
+  
+  <meta name="description" content="监听HTTP请求并解析报文,实现一个HelloWorld。 1.实现 server.h #include &amp;lt;stdio.h&amp;gt;#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;pthread.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt;#include &amp;lt;arpa/inet.h&amp;gt;#include &amp;lt;netinet/in.h&amp;gt;#include &amp;lt;stdlib.h&amp;gt;#include &amp;lt;string.h&amp;gt;#include &amp;lt;unistd.h&amp;gt;#include &amp;lt;stdarg.h&amp;gt;#include &amp;lt;signal.h&amp;gt; #define SERVER_PORT 8000 struct SocketArg { intptr_t client_sock; char * ip_address; }; struct KeyValue { char *name; char *value; struct KeyValue *next; }; struct Request { int client; char method[5]; char path[80]; struct KeyValue *post_arg; struct KeyValue *request_arg; struct KeyValue *headers; }; void init_server(); void parser_request(void *arg); int get_line(int client,char *buf,int size); struct KeyValue"/>
+  
+
+  
+  
+  <meta name="keywords" content="分享, 编程, Go"/>
+  
+
+  
+  <link rel="canonical" href="https://nyloner.github.io/posts/2016_12_12_1/"/>
+
+  
+
+  <title>C语言实现一个简单的HTTP Server &middot; 零度</title>
+
+  <link rel="shortcut icon" href="https://nyloner.github.io/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://nyloner.github.io/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://nyloner.github.io/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://nyloner.github.io/css/zozo.css"/>
+  <link rel="stylesheet" href="https://nyloner.github.io/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://nyloner.github.io">
+          <span>零度</span>
+          <img src="https://nyloner.github.io/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title"></p>
+      <div class="my_socials">
+        
+        
+        <a href="https://github.com/Nyloner/" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        <a href="https://nyloner.github.io/index.xml" type="application/rss+xml" title="rss" target="_blank"><i class="remixicon-rss-fill"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/2016_12_12_1/'>C语言实现一个简单的HTTP Server</a></h2>
+          <span class="date">2016.12.12</span>
+        </div>
+        <div class="post_content markdown"><p>监听HTTP请求并解析报文,实现一个HelloWorld。</p>
+<h2 id="1">1.实现</h2>
+<p>server.h</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;stdio.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;sys/types.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;pthread.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;sys/socket.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;arpa/inet.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;netinet/in.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;stdlib.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;string.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;unistd.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;stdarg.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&lt;signal.h&gt;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#75715e">#</span><span style="color:#75715e">define SERVER_PORT 8000</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">struct</span> SocketArg
+{
+    intptr_t client_sock;
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> ip_address;
+};
+
+<span style="color:#66d9ef">struct</span> KeyValue
+{
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>name;
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>value;
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>next;
+};
+
+<span style="color:#66d9ef">struct</span> Request
+{
+    <span style="color:#66d9ef">int</span> client;
+    <span style="color:#66d9ef">char</span> method[<span style="color:#ae81ff">5</span>];
+    <span style="color:#66d9ef">char</span> path[<span style="color:#ae81ff">80</span>];
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>post_arg;
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>request_arg;
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>headers;
+};
+
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">init_server</span>();
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">parser_request</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>arg);
+<span style="color:#66d9ef">int</span> <span style="color:#a6e22e">get_line</span>(<span style="color:#66d9ef">int</span> client,<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>buf,<span style="color:#66d9ef">int</span> size);
+<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_headers</span>(<span style="color:#66d9ef">int</span> client);
+<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_request_arg</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>url,<span style="color:#66d9ef">int</span> index);
+<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_headers</span>(<span style="color:#66d9ef">int</span> client);
+<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_value</span>(<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>p,<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>key);
+<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_post_arg</span>(<span style="color:#66d9ef">int</span> client,<span style="color:#66d9ef">int</span> length);
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">free_memory</span>(<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>p);
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">stop_server</span>();
+<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">local_time</span>();
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">helloworld</span>(<span style="color:#66d9ef">struct</span> Request <span style="color:#f92672">*</span>request);
+</code></pre></div><p>server.c</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-c" data-lang="c"><span style="color:#75715e">#</span><span style="color:#75715e">include</span> <span style="color:#75715e">&#34;server.h&#34;</span><span style="color:#75715e">
+</span><span style="color:#75715e"></span>
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">init_server</span>()
+{
+    <span style="color:#66d9ef">struct</span> sockaddr_in name;
+    <span style="color:#66d9ef">struct</span> sockaddr_in remote_client;
+    <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> client_len;
+    <span style="color:#66d9ef">int</span> opt<span style="color:#f92672">=</span><span style="color:#ae81ff">1</span>;
+
+    <span style="color:#75715e">/* 创建socket
+</span><span style="color:#75715e">       函数原型:
+</span><span style="color:#75715e">       int socket(int domain, int type, int protocol);
+</span><span style="color:#75715e">
+</span><span style="color:#75715e">       domain:协议域。AF_INET表示要用ipv4地址。
+</span><span style="color:#75715e">       type:指定socket类型。SOCK_STREAM，流式Socket（SOCK_STREAM）是一种面向连接的Socket，针对于面向连接的TCP服务应用。
+</span><span style="color:#75715e">       protocol:指定传输协议。IPPROTO_TCP对于TCP协议
+</span><span style="color:#75715e">    */</span>
+    <span style="color:#66d9ef">int</span> server_socket<span style="color:#f92672">=</span>socket(AF_INET, SOCK_STREAM,IPPROTO_TCP);
+
+    <span style="color:#66d9ef">if</span>(server_socket<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)<span style="color:#75715e">//创建失败
+</span><span style="color:#75715e"></span>    {
+        printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Error</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+        exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+    }
+
+    <span style="color:#75715e">/* 绑定IP和端口
+</span><span style="color:#75715e">       函数原型：
+</span><span style="color:#75715e">       int bind(SOCKET socket, const struct sockaddr* address, socklen_t address_len);
+</span><span style="color:#75715e">
+</span><span style="color:#75715e">       socket:套接字描述符。
+</span><span style="color:#75715e">       address:sockaddr结构指针，该结构中包含了要结合的地址和端口号。
+</span><span style="color:#75715e">       address_len:确定address缓冲区的长度。
+</span><span style="color:#75715e">    */</span>
+    name.sin_family <span style="color:#f92672">=</span> AF_INET;
+    name.sin_port <span style="color:#f92672">=</span> htons(SERVER_PORT);
+    name.sin_addr.s_addr <span style="color:#f92672">=</span> htonl(INADDR_ANY);
+
+    <span style="color:#66d9ef">if</span>(bind(server_socket,(<span style="color:#66d9ef">struct</span> sockaddr <span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>name, <span style="color:#66d9ef">sizeof</span>(name))<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+    {
+        printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Bind Error !</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+        exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+    }
+
+    <span style="color:#75715e">//开始监听
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span>(listen(server_socket, <span style="color:#ae81ff">5</span>)<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+    {
+        printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Listen Error !</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+        exit(<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>);
+    }
+
+    <span style="color:#66d9ef">while</span>(<span style="color:#ae81ff">1</span>)
+    {
+        <span style="color:#75715e">//接受连接请求
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">int</span> client_sock<span style="color:#f92672">=</span>accept(server_socket,(<span style="color:#66d9ef">struct</span> sockaddr <span style="color:#f92672">*</span>)<span style="color:#f92672">&amp;</span>remote_client,<span style="color:#f92672">&amp;</span>client_len);
+
+        <span style="color:#75715e">//传递参数的结构
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">struct</span> SocketArg <span style="color:#f92672">*</span>arg<span style="color:#f92672">=</span>(<span style="color:#66d9ef">struct</span> SocketArg<span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">struct</span> SocketArg));
+        arg<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>client_sock<span style="color:#f92672">=</span>client_sock;
+        arg<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>ip_address<span style="color:#f92672">=</span>inet_ntoa(remote_client.sin_addr);<span style="color:#75715e">//客户端IP地址
+</span><span style="color:#75715e"></span>
+        <span style="color:#66d9ef">if</span>(client_sock<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#f92672">-</span><span style="color:#ae81ff">1</span>)
+        {
+            <span style="color:#75715e">//子线程处理请求
+</span><span style="color:#75715e"></span>            pthread_t client_pid;
+            pthread_create(<span style="color:#f92672">&amp;</span>client_pid,NULL,(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>)parser_request,(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>)arg);
+        }
+    }
+}
+
+<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">local_time</span>()<span style="color:#75715e">//获取当前时间
+</span><span style="color:#75715e"></span>{
+    time_t timep;
+    <span style="color:#66d9ef">struct</span> tm <span style="color:#f92672">*</span>p;
+    time(<span style="color:#f92672">&amp;</span>timep);
+    p<span style="color:#f92672">=</span>localtime(<span style="color:#f92672">&amp;</span>timep);
+
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>loc_time<span style="color:#f92672">=</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>)<span style="color:#f92672">*</span><span style="color:#ae81ff">20</span>);
+    sprintf(loc_time, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">%04d-%02d-%02d %02d:%02d:%02d</span><span style="color:#e6db74">&#34;</span>,<span style="color:#ae81ff">1900</span><span style="color:#f92672">+</span>p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>tm_year,p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>tm_mon,p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>tm_mday,p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>tm_hour,p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>tm_min,p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>tm_sec);
+    <span style="color:#66d9ef">return</span> loc_time;
+}
+
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">parser_request</span>(<span style="color:#66d9ef">void</span> <span style="color:#f92672">*</span>arg)<span style="color:#75715e">//解析request
+</span><span style="color:#75715e"></span>{
+    <span style="color:#66d9ef">struct</span> SocketArg <span style="color:#f92672">*</span>socket_arg<span style="color:#f92672">=</span>(<span style="color:#66d9ef">struct</span> SocketArg <span style="color:#f92672">*</span>)arg;
+    <span style="color:#66d9ef">int</span> client<span style="color:#f92672">=</span>socket_arg<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>client_sock;
+    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">1024</span>];
+    <span style="color:#66d9ef">char</span> url[<span style="color:#ae81ff">255</span>];
+    <span style="color:#66d9ef">int</span> read_size;
+    <span style="color:#66d9ef">struct</span> Request <span style="color:#f92672">*</span>request<span style="color:#f92672">=</span>(<span style="color:#66d9ef">struct</span> Request<span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">struct</span> Request));
+    request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>request_arg<span style="color:#f92672">=</span>NULL;
+    request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>post_arg<span style="color:#f92672">=</span>NULL;
+    request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>client<span style="color:#f92672">=</span>client;
+
+    read_size<span style="color:#f92672">=</span>get_line(client,buf, <span style="color:#66d9ef">sizeof</span>(buf));<span style="color:#75715e">//读取HTTP报文第一行
+</span><span style="color:#75715e"></span>
+    <span style="color:#75715e">//打印时间和客户端信息
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>loc_time<span style="color:#f92672">=</span>local_time();
+    <span style="color:#66d9ef">char</span> log_string[<span style="color:#ae81ff">255</span>];
+    sprintf(log_string,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\t</span><span style="color:#e6db74">%s</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,loc_time,socket_arg<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>ip_address,buf);
+    printf(<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">%s</span><span style="color:#e6db74">&#34;</span>,log_string);
+    free(socket_arg);
+
+    <span style="color:#75715e">//Get method
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">int</span> index<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">while</span>(buf[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74"> </span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>index<span style="color:#f92672">&lt;</span>read_size)
+    {
+        request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>method[index]<span style="color:#f92672">=</span>buf[index];
+        index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+    }
+    request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>method[index]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+
+    <span style="color:#75715e">//Get url
+</span><span style="color:#75715e"></span>    index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+    <span style="color:#66d9ef">int</span> url_i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">while</span>(buf[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74"> </span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>index<span style="color:#f92672">&lt;</span>read_size<span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>url_i<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">sizeof</span>(url))
+    {
+        url[url_i]<span style="color:#f92672">=</span>buf[index];
+        url_i<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+        index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+    }
+    url[url_i]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+
+    <span style="color:#75715e">//Get Path
+</span><span style="color:#75715e"></span>    index<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">while</span>(url[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>url[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">?</span><span style="color:#e6db74">&#39;</span>)
+    {
+        request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>path[index]<span style="color:#f92672">=</span>url[index];
+        index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+    }
+    request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>path[index]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+
+    <span style="color:#75715e">//获取GET请求的参数
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span>(url[index]<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">?</span><span style="color:#e6db74">&#39;</span>)
+    {
+        request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>request_arg<span style="color:#f92672">=</span>get_request_arg(url,index<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>);
+    }
+
+    <span style="color:#75715e">//获取headers
+</span><span style="color:#75715e"></span>    request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>headers<span style="color:#f92672">=</span>get_headers(client);
+
+    <span style="color:#75715e">//如果method为POST,获取POST请求的参数
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>strcmp(request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>method,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">POST</span><span style="color:#e6db74">&#34;</span>))
+    {
+        <span style="color:#75715e">//获取POST数据的长度
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>content_length<span style="color:#f92672">=</span>get_value(request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>headers,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Content-Length</span><span style="color:#e6db74">&#34;</span>);
+        <span style="color:#66d9ef">int</span> length<span style="color:#f92672">=</span>atoi(content_length);
+
+        <span style="color:#75715e">//获得POST数据的类型
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>content_type<span style="color:#f92672">=</span>get_value(request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>headers,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Content-Type</span><span style="color:#e6db74">&#34;</span>);
+
+        <span style="color:#75715e">//若类型为application/x-www-form-urlencoded，则将其解析为KeyValue类型
+</span><span style="color:#75715e"></span>        <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>strcmp(content_type,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">application/x-www-form-urlencoded</span><span style="color:#e6db74">&#34;</span>))
+        {
+            request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>post_arg<span style="color:#f92672">=</span>get_post_arg(request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>client,length);
+        }
+    }
+    helloworld(request);
+}
+
+<span style="color:#66d9ef">struct</span> KeyValue<span style="color:#f92672">*</span> <span style="color:#a6e22e">get_post_arg</span>(<span style="color:#66d9ef">int</span> client,<span style="color:#66d9ef">int</span> length)
+{
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>post_string<span style="color:#f92672">=</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>)<span style="color:#f92672">*</span>(length<span style="color:#f92672">+</span><span style="color:#ae81ff">2</span>));
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>post_arg<span style="color:#f92672">=</span>NULL;
+    <span style="color:#66d9ef">char</span> c;
+    <span style="color:#66d9ef">int</span> index;
+    <span style="color:#75715e">//读取POST请求的数据
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">for</span>(index<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;index<span style="color:#f92672">&lt;</span>length;<span style="color:#f92672">+</span><span style="color:#f92672">+</span>index)
+    {
+        ssize_t num<span style="color:#f92672">=</span>recv(client,<span style="color:#f92672">&amp;</span>c,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>);
+        <span style="color:#66d9ef">if</span>(num<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>)
+        {
+            post_string[index]<span style="color:#f92672">=</span>c;
+        }
+        <span style="color:#66d9ef">else</span>
+        {
+            <span style="color:#66d9ef">break</span>;
+        }
+    }
+    post_string[index]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+    <span style="color:#75715e">//解析
+</span><span style="color:#75715e"></span>    post_arg<span style="color:#f92672">=</span>get_request_arg(post_string,<span style="color:#ae81ff">0</span>);
+    free(post_string);
+    <span style="color:#66d9ef">return</span> post_arg;
+}
+
+<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_value</span>(<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>p,<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>key)
+{
+    <span style="color:#75715e">//通过Key获取Value
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">while</span>(p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">!</span><span style="color:#f92672">=</span>NULL)
+    {
+        <span style="color:#66d9ef">if</span>(<span style="color:#f92672">!</span>strcmp(p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name,key))
+            <span style="color:#66d9ef">return</span> p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value;
+        p<span style="color:#f92672">=</span>p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next;
+    }
+    <span style="color:#66d9ef">return</span> NULL;
+}
+
+<span style="color:#75715e">//获取headers
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_headers</span>(<span style="color:#66d9ef">int</span> client)
+{
+    <span style="color:#66d9ef">char</span> line[<span style="color:#ae81ff">255</span>];
+    <span style="color:#66d9ef">int</span> read_size<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>header<span style="color:#f92672">=</span>(<span style="color:#66d9ef">struct</span> KeyValue<span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">struct</span> KeyValue));
+    header<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span>NULL;
+    header<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next<span style="color:#f92672">=</span>NULL;
+    header<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value<span style="color:#f92672">=</span>NULL;
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>tail<span style="color:#f92672">=</span>header;
+    <span style="color:#66d9ef">while</span>((read_size<span style="color:#f92672">=</span>get_line(client,line,<span style="color:#66d9ef">sizeof</span>(line)))<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>)
+    {
+        <span style="color:#66d9ef">char</span> name[<span style="color:#ae81ff">80</span>];
+        <span style="color:#66d9ef">char</span> value[<span style="color:#ae81ff">255</span>];
+        <span style="color:#66d9ef">int</span> index<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+        <span style="color:#66d9ef">while</span>(line[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">:</span><span style="color:#e6db74">&#39;</span>)
+        {
+            name[index]<span style="color:#f92672">=</span>line[index];
+            index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+        }
+        name[index]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+        index<span style="color:#f92672">+</span><span style="color:#f92672">=</span><span style="color:#ae81ff">2</span>;
+
+        <span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+        <span style="color:#66d9ef">while</span>(line[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>)
+        {
+            value[i]<span style="color:#f92672">=</span>line[index];
+            i<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+            index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+        }
+        value[i]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>)<span style="color:#f92672">*</span>strlen(name));
+        strcpy(tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name,name);
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value<span style="color:#f92672">=</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>)<span style="color:#f92672">*</span>strlen(value));
+        strcpy(tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value,value);
+
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next<span style="color:#f92672">=</span>(<span style="color:#66d9ef">struct</span> KeyValue<span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">struct</span> KeyValue));
+        tail<span style="color:#f92672">=</span>tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next;
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span>NULL;
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value<span style="color:#f92672">=</span>NULL;
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next<span style="color:#f92672">=</span>NULL;
+    }
+    <span style="color:#66d9ef">if</span>(header<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span><span style="color:#f92672">=</span>NULL)
+    {
+        free_memory(header);
+        <span style="color:#66d9ef">return</span> NULL;
+    }
+    <span style="color:#66d9ef">return</span> header;
+}
+
+<span style="color:#75715e">//读取HTTP报文一行
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">int</span> <span style="color:#a6e22e">get_line</span>(<span style="color:#66d9ef">int</span> client,<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>buf,<span style="color:#66d9ef">int</span> size)
+{
+    <span style="color:#66d9ef">char</span> c<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+    <span style="color:#66d9ef">int</span> read_size<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+    <span style="color:#66d9ef">while</span>(read_size<span style="color:#f92672">&lt;</span>size<span style="color:#f92672">-</span><span style="color:#ae81ff">1</span><span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>c<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\n</span><span style="color:#e6db74">&#39;</span>)
+    {
+        ssize_t num<span style="color:#f92672">=</span>recv(client,<span style="color:#f92672">&amp;</span>c,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>);
+        <span style="color:#66d9ef">if</span>(num<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span>)
+        {
+            <span style="color:#66d9ef">if</span>(c<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\r</span><span style="color:#e6db74">&#39;</span>)
+            {
+                num<span style="color:#f92672">=</span>recv(client,<span style="color:#f92672">&amp;</span>c,<span style="color:#ae81ff">1</span>,MSG_PEEK);
+                <span style="color:#66d9ef">if</span>(num<span style="color:#f92672">&gt;</span><span style="color:#ae81ff">0</span><span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>c<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\n</span><span style="color:#e6db74">&#39;</span>)
+                    recv(client,<span style="color:#f92672">&amp;</span>c,<span style="color:#ae81ff">1</span>,<span style="color:#ae81ff">0</span>);
+                <span style="color:#66d9ef">else</span>
+                    c<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\n</span><span style="color:#e6db74">&#39;</span>;
+            }
+            <span style="color:#66d9ef">if</span>(c<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\n</span><span style="color:#e6db74">&#39;</span>)
+            {
+                buf[read_size]<span style="color:#f92672">=</span>c;
+                read_size<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+            }
+        }
+        <span style="color:#66d9ef">else</span>
+        {
+            c<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\n</span><span style="color:#e6db74">&#39;</span>;
+        }
+    }
+    buf[read_size]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+    <span style="color:#66d9ef">return</span> read_size;
+}
+
+<span style="color:#75715e">//解析字符串，转化为KeyValue类型
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span> <span style="color:#a6e22e">get_request_arg</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>string,<span style="color:#66d9ef">int</span> index)
+{
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span> request_arg<span style="color:#f92672">=</span>(<span style="color:#66d9ef">struct</span> KeyValue<span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">struct</span> KeyValue));
+    <span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>tail<span style="color:#f92672">=</span>request_arg;
+    tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next<span style="color:#f92672">=</span>NULL;
+    tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span>NULL;
+    tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value<span style="color:#f92672">=</span>NULL;
+    size_t length<span style="color:#f92672">=</span>strlen(string);
+
+    <span style="color:#66d9ef">while</span>(index<span style="color:#f92672">&lt;</span>length)
+    {
+        <span style="color:#66d9ef">char</span> name[<span style="color:#ae81ff">255</span>];
+        <span style="color:#66d9ef">char</span> value[<span style="color:#ae81ff">255</span>];
+        <span style="color:#66d9ef">int</span> i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+        <span style="color:#66d9ef">while</span>(index<span style="color:#f92672">&lt;</span>length<span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>string[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">=</span><span style="color:#e6db74">&#39;</span>)
+        {
+            name[i]<span style="color:#f92672">=</span>string[index];
+            i<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+            index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+        }
+        name[i]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+        <span style="color:#66d9ef">if</span>(index<span style="color:#f92672">&gt;</span><span style="color:#f92672">=</span>length)
+            <span style="color:#66d9ef">break</span>;
+        i<span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>;
+        index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+        <span style="color:#66d9ef">while</span>(index<span style="color:#f92672">&lt;</span>length<span style="color:#f92672">&amp;</span><span style="color:#f92672">&amp;</span>string[index]<span style="color:#f92672">!</span><span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">&amp;</span><span style="color:#e6db74">&#39;</span>)
+        {
+            value[i]<span style="color:#f92672">=</span>string[index];
+            index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+            i<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+        }
+        value[i]<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">\0</span><span style="color:#e6db74">&#39;</span>;
+
+        <span style="color:#66d9ef">if</span>(strcmp(value,<span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&#34;</span>)<span style="color:#f92672">=</span><span style="color:#f92672">=</span><span style="color:#ae81ff">0</span>)
+            <span style="color:#66d9ef">continue</span>;
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>)<span style="color:#f92672">*</span>strlen(name));
+        strcpy(tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name,name);
+
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value<span style="color:#f92672">=</span>(<span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">char</span>)<span style="color:#f92672">*</span>strlen(value));
+        strcpy(tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value,value);
+
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next<span style="color:#f92672">=</span>(<span style="color:#66d9ef">struct</span> KeyValue<span style="color:#f92672">*</span>)malloc(<span style="color:#66d9ef">sizeof</span>(<span style="color:#66d9ef">struct</span> KeyValue));
+        tail<span style="color:#f92672">=</span>tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next;
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value<span style="color:#f92672">=</span>NULL;
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next<span style="color:#f92672">=</span>NULL;
+        tail<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span>NULL;
+        index<span style="color:#f92672">+</span><span style="color:#f92672">+</span>;
+    }
+    <span style="color:#66d9ef">if</span>(request_arg<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">=</span><span style="color:#f92672">=</span>NULL)
+    {
+        free_memory(request_arg);
+        <span style="color:#66d9ef">return</span> NULL;
+    }
+    <span style="color:#66d9ef">return</span> request_arg;
+}
+
+<span style="color:#75715e">//释放内存
+</span><span style="color:#75715e"></span><span style="color:#66d9ef">void</span> <span style="color:#a6e22e">free_memory</span>(<span style="color:#66d9ef">struct</span> KeyValue <span style="color:#f92672">*</span>p)
+{
+    <span style="color:#66d9ef">if</span>(p<span style="color:#f92672">=</span><span style="color:#f92672">=</span>NULL)
+        <span style="color:#66d9ef">return</span>;
+    free_memory(p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>next);
+    <span style="color:#66d9ef">if</span>(p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name<span style="color:#f92672">!</span><span style="color:#f92672">=</span>NULL)
+        free(p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>name);
+    <span style="color:#66d9ef">if</span>(p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value<span style="color:#f92672">!</span><span style="color:#f92672">=</span>NULL)
+        free(p<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>value);
+    free(p);
+}
+
+<span style="color:#66d9ef">void</span> <span style="color:#a6e22e">helloworld</span>(<span style="color:#66d9ef">struct</span> Request <span style="color:#f92672">*</span>request)
+{
+    <span style="color:#66d9ef">char</span> buf[<span style="color:#ae81ff">255</span>];
+    <span style="color:#66d9ef">char</span> <span style="color:#f92672">*</span>loc_time<span style="color:#f92672">=</span>local_time();
+    <span style="color:#66d9ef">int</span> client<span style="color:#f92672">=</span>request<span style="color:#f92672">-</span><span style="color:#f92672">&gt;</span>client;
+
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">HTTP/1.1 200 OK</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Server: NyServer/0.1.0</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Date: %s</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>,loc_time);
+    free(loc_time);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">Content-Type: text/html;charset=utf-8</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&lt;HTML&gt;&lt;TITLE&gt;HelloWorld!&lt;/TITLE&gt;</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&lt;BODY&gt;&lt;P&gt;HelloWorld!&lt;/P&gt;</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    sprintf(buf, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">&lt;/BODY&gt;&lt;/HTML&gt;</span><span style="color:#ae81ff">\r</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#34;</span>);
+    send(client, buf, strlen(buf), <span style="color:#ae81ff">0</span>);
+    close(client);
+}
+</code></pre></div></div>
+        <div class="post_footer">
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://zeuk.me">Designed by Zeuk,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>做自己喜欢的事，爱自己喜欢的人，成就想成为的自己。</span>
+  </div>
+</footer>
+
+
+
+<script src="https://nyloner.github.io/js/jquery-3.3.1.min.js"></script>
+<script src="https://nyloner.github.io/js/zozo.js"></script>
+<script src="https://nyloner.github.io/js/highlight.pack.js"></script>
+<link  href="https://nyloner.github.io/css/fancybox.min.css" rel="stylesheet">
+<script src="https://nyloner.github.io/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>
