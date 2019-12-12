@@ -3,17 +3,22 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://www.nyloner.cn/about/</loc>
+    <lastmod>2019-12-12T13:41:56+08:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://www.nyloner.cn/</loc>
+    <lastmod>2019-12-12T13:41:56+08:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://www.nyloner.cn/posts/2017_12_11_1/</loc>
     <lastmod>2017-12-11T22:48:40+08:00</lastmod>
   </url>
   
   <url>
     <loc>https://www.nyloner.cn/posts/</loc>
-    <lastmod>2017-12-11T22:48:40+08:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://www.nyloner.cn/</loc>
     <lastmod>2017-12-11T22:48:40+08:00</lastmod>
   </url>
   
