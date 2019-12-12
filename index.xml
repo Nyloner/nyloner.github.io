@@ -2,66 +2,66 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>零度</title>
-    <link>https://nyloner.github.io/</link>
+    <link>https://www.nyloner.cn/</link>
     <description>Recent content on 零度</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
     <lastBuildDate>Mon, 11 Dec 2017 22:48:40 +0800</lastBuildDate>
     
-	<atom:link href="https://nyloner.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://www.nyloner.cn/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Docker的简单使用</title>
-      <link>https://nyloner.github.io/posts/2017_12_11_1/</link>
+      <link>https://www.nyloner.cn/posts/2017_12_11_1/</link>
       <pubDate>Mon, 11 Dec 2017 22:48:40 +0800</pubDate>
       
-      <guid>https://nyloner.github.io/posts/2017_12_11_1/</guid>
+      <guid>https://www.nyloner.cn/posts/2017_12_11_1/</guid>
       <description>安装Docker 详见Docker官网：https://www.docker.com/ Preparing Dockerfile 创建Dockerfile文件，修改username和userpasswd写入： # setting base image FROM ubuntu:17.10 # new a directory for sshd to run RUN mkdir -p</description>
     </item>
     
     <item>
       <title>将Shadowsocks Socks5代理转为HTTP代理</title>
-      <link>https://nyloner.github.io/posts/2017_12_10_1/</link>
+      <link>https://www.nyloner.cn/posts/2017_12_10_1/</link>
       <pubDate>Sun, 10 Dec 2017 22:19:29 +0800</pubDate>
       
-      <guid>https://nyloner.github.io/posts/2017_12_10_1/</guid>
+      <guid>https://www.nyloner.cn/posts/2017_12_10_1/</guid>
       <description>部分shell程序无法使用socks5代理，通过polipo可将socks5代理转为HTTP代理 Install For Mac: brew install polipo For Linux: apt-get install polipo Usage 例如Shadowsocks默认代理端口为1080，可通过以下命令使用，默认监听端</description>
     </item>
     
     <item>
       <title>相似图片搜索(pHash,dHash)</title>
-      <link>https://nyloner.github.io/posts/2017_10_12_1/</link>
+      <link>https://www.nyloner.cn/posts/2017_10_12_1/</link>
       <pubDate>Thu, 12 Oct 2017 22:48:40 +0800</pubDate>
       
-      <guid>https://nyloner.github.io/posts/2017_10_12_1/</guid>
+      <guid>https://www.nyloner.cn/posts/2017_10_12_1/</guid>
       <description>基于感知哈希算法，对每张图片生成一个“指纹”字符串，再比较图片的指纹，指纹越接近则说明图片越相似。 1.计算指纹信息 直接利用的Python的imagehash库，该库包含了一些指纹计算的方法，直接调用即</description>
     </item>
     
     <item>
       <title>C语言实现一个简单的HTTP Server</title>
-      <link>https://nyloner.github.io/posts/2016_12_12_1/</link>
+      <link>https://www.nyloner.cn/posts/2016_12_12_1/</link>
       <pubDate>Mon, 12 Dec 2016 22:48:40 +0800</pubDate>
       
-      <guid>https://nyloner.github.io/posts/2016_12_12_1/</guid>
+      <guid>https://www.nyloner.cn/posts/2016_12_12_1/</guid>
       <description>监听HTTP请求并解析报文,实现一个HelloWorld。 1.实现 server.h #include &amp;lt;stdio.h&amp;gt;#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;pthread.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt;#include &amp;lt;arpa/inet.h&amp;gt;#include &amp;lt;netinet/in.h&amp;gt;#include &amp;lt;stdlib.h&amp;gt;#include &amp;lt;string.h&amp;gt;#include &amp;lt;unistd.h&amp;gt;#include &amp;lt;stdarg.h&amp;gt;#include &amp;lt;signal.h&amp;gt; #define SERVER_PORT 8000 struct SocketArg { intptr_t client_sock; char * ip_address; }; struct KeyValue { char *name; char *value; struct KeyValue *next; }; struct Request { int client; char method[5]; char path[80]; struct KeyValue *post_arg; struct KeyValue *request_arg; struct KeyValue *headers; }; void init_server(); void parser_request(void *arg); int get_line(int client,char *buf,int size); struct KeyValue</description>
     </item>
     
     <item>
       <title>Python编写自己的抓包工具</title>
-      <link>https://nyloner.github.io/posts/2016_09_12_1/</link>
+      <link>https://www.nyloner.cn/posts/2016_09_12_1/</link>
       <pubDate>Mon, 12 Sep 2016 22:48:40 +0800</pubDate>
       
-      <guid>https://nyloner.github.io/posts/2016_09_12_1/</guid>
+      <guid>https://www.nyloner.cn/posts/2016_09_12_1/</guid>
       <description>1.安装scapy Scapy的是一个强大的交互式数据包处理程序（使用python编写）。它能够伪造或者解码大量的网络协议数据包，能够发送、捕捉、匹配请求和回复包等等。它可以很容易地处理一些典型操作，比</description>
     </item>
     
     <item>
       <title>PIL生成验证码</title>
-      <link>https://nyloner.github.io/posts/2016_09_03_1/</link>
+      <link>https://www.nyloner.cn/posts/2016_09_03_1/</link>
       <pubDate>Sat, 03 Sep 2016 22:48:40 +0800</pubDate>
       
-      <guid>https://nyloner.github.io/posts/2016_09_03_1/</guid>
+      <guid>https://www.nyloner.cn/posts/2016_09_03_1/</guid>
       <description>为了防止程序恶意请求，使用图片验证码是最常见的手段。 PIL PIL是一个Python中一个非常强大的图像处理库，这里我们使用PIL来生成图片验证码 安装PIL pip install Pillow Windows下可以直接到官网下载exe安装</description>
     </item>
     
