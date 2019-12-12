@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Linux on 零度</title>
+    <link>https://www.nyloner.cn/tags/linux/</link>
+    <description>Recent content in Linux on 零度</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 11 Dec 2017 22:48:40 +0800</lastBuildDate>
+    
+	<atom:link href="https://www.nyloner.cn/tags/linux/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Docker的简单使用</title>
+      <link>https://www.nyloner.cn/posts/2017_12_11_1/</link>
+      <pubDate>Mon, 11 Dec 2017 22:48:40 +0800</pubDate>
+      
+      <guid>https://www.nyloner.cn/posts/2017_12_11_1/</guid>
+      <description>安装Docker 详见Docker官网：https://www.docker.com/ Preparing Dockerfile 创建Dockerfile文件，修改username和userpasswd写入： # setting base image FROM ubuntu:17.10 # new a directory for sshd to run RUN mkdir -p</description>
+    </item>
+    
+    <item>
+      <title>将Shadowsocks Socks5代理转为HTTP代理</title>
+      <link>https://www.nyloner.cn/posts/2017_12_10_1/</link>
+      <pubDate>Sun, 10 Dec 2017 22:19:29 +0800</pubDate>
+      
+      <guid>https://www.nyloner.cn/posts/2017_12_10_1/</guid>
+      <description>部分shell程序无法使用socks5代理，通过polipo可将socks5代理转为HTTP代理 Install For Mac: brew install polipo For Linux: apt-get install polipo Usage 例如Shadowsocks默认代理端口为1080，可通过以下命令使用，默认监听端</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>HTTP on 零度</title>
+    <link>https://www.nyloner.cn/tags/http/</link>
+    <description>Recent content in HTTP on 零度</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 12 Dec 2016 22:48:40 +0800</lastBuildDate>
+    
+	<atom:link href="https://www.nyloner.cn/tags/http/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>C语言实现一个简单的HTTP Server</title>
+      <link>https://www.nyloner.cn/posts/2016_12_12_1/</link>
+      <pubDate>Mon, 12 Dec 2016 22:48:40 +0800</pubDate>
+      
+      <guid>https://www.nyloner.cn/posts/2016_12_12_1/</guid>
+      <description>监听HTTP请求并解析报文,实现一个HelloWorld。 1.实现 server.h #include &amp;lt;stdio.h&amp;gt;#include &amp;lt;sys/types.h&amp;gt;#include &amp;lt;pthread.h&amp;gt;#include &amp;lt;sys/socket.h&amp;gt;#include &amp;lt;arpa/inet.h&amp;gt;#include &amp;lt;netinet/in.h&amp;gt;#include &amp;lt;stdlib.h&amp;gt;#include &amp;lt;string.h&amp;gt;#include &amp;lt;unistd.h&amp;gt;#include &amp;lt;stdarg.h&amp;gt;#include &amp;lt;signal.h&amp;gt; #define SERVER_PORT 8000 struct SocketArg { intptr_t client_sock; char * ip_address; }; struct KeyValue { char *name; char *value; struct KeyValue *next; }; struct Request { int client; char method[5]; char path[80]; struct KeyValue *post_arg; struct KeyValue *request_arg; struct KeyValue *headers; }; void init_server(); void parser_request(void *arg); int get_line(int client,char *buf,int size); struct KeyValue</description>
+    </item>
+    
+  </channel>
+</rss>

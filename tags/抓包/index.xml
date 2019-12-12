@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>抓包 on 零度</title>
+    <link>https://www.nyloner.cn/tags/%E6%8A%93%E5%8C%85/</link>
+    <description>Recent content in 抓包 on 零度</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 12 Sep 2016 22:48:40 +0800</lastBuildDate>
+    
+	<atom:link href="https://www.nyloner.cn/tags/%E6%8A%93%E5%8C%85/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Python编写自己的抓包工具</title>
+      <link>https://www.nyloner.cn/posts/2016_09_12_1/</link>
+      <pubDate>Mon, 12 Sep 2016 22:48:40 +0800</pubDate>
+      
+      <guid>https://www.nyloner.cn/posts/2016_09_12_1/</guid>
+      <description>1.安装scapy Scapy的是一个强大的交互式数据包处理程序（使用python编写）。它能够伪造或者解码大量的网络协议数据包，能够发送、捕捉、匹配请求和回复包等等。它可以很容易地处理一些典型操作，比</description>
+    </item>
+    
+  </channel>
+</rss>

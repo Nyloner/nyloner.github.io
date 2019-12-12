@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Docker on 零度</title>
+    <link>https://www.nyloner.cn/tags/docker/</link>
+    <description>Recent content in Docker on 零度</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Mon, 11 Dec 2017 22:48:40 +0800</lastBuildDate>
+    
+	<atom:link href="https://www.nyloner.cn/tags/docker/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Docker的简单使用</title>
+      <link>https://www.nyloner.cn/posts/2017_12_11_1/</link>
+      <pubDate>Mon, 11 Dec 2017 22:48:40 +0800</pubDate>
+      
+      <guid>https://www.nyloner.cn/posts/2017_12_11_1/</guid>
+      <description>安装Docker 详见Docker官网：https://www.docker.com/ Preparing Dockerfile 创建Dockerfile文件，修改username和userpasswd写入： # setting base image FROM ubuntu:17.10 # new a directory for sshd to run RUN mkdir -p</description>
+    </item>
+    
+  </channel>
+</rss>
