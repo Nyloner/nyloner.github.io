@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="nyloner"/>
+
+  
+  <meta name="description" content="爬虫开发中，经常会遇到反爬封IP的情况，一些代理网站提供了免费的代理，可用的虽不多，挑挑拣拣勉强能用，购买代理毕竟太贵。 这里实现了一个代理工具，实现方式很简单： 定时爬取不同代理网站中的免费代理，验证可"/>
+  
+
+  
+  
+  <meta name="keywords" content="分享, 编程, Go"/>
+  
+
+  
+  <link rel="canonical" href="https://www.nyloner.cn/posts/2019_12_12_1/"/>
+
+  
+
+  <title>一个简单的爬虫代理工具 &middot; 零度</title>
+
+  <link rel="shortcut icon" href="https://www.nyloner.cn/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/zozo.css"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://www.nyloner.cn">
+          <span>零度</span>
+          <img src="https://www.nyloner.cn/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title"></p>
+      <div class="my_socials">
+        
+        
+        <a href="https://github.com/Nyloner/" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        <a href="https://www.nyloner.cn/index.xml" type="application/rss+xml" title="rss" target="_blank"><i class="remixicon-rss-fill"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/2019_12_12_1/'>一个简单的爬虫代理工具</a></h2>
+          <span class="date">2019.12.12</span>
+        </div>
+        <div class="post_content markdown"><p>爬虫开发中，经常会遇到反爬封IP的情况，一些代理网站提供了免费的代理，可用的虽不多，挑挑拣拣勉强能用，购买代理毕竟太贵。</p>
+<p>这里实现了一个代理工具，实现方式很简单：</p>
+<ul>
+<li>
+<p>定时爬取不同代理网站中的免费代理，验证可用的代理，存储在redis-zset中（验证时间作为score），作为代理IP池</p>
+</li>
+<li>
+<p>定时验证代理IP池中的代理，更新代理验证时间，并剔除掉不可用代理</p>
+</li>
+<li>
+<p>ProxyServer作为代理转发服务，接收client的连接，并从代理IP池中随机选择一个最近更新的代理建立连接，读取client的数据转发给代理服务&amp;读取代理服务返回的数据转发给client</p>
+</li>
+</ul>
+<p>流程如下：
+<img src="/proxy.jpeg" alt="proxy_image"></p>
+<h2 id="heading">实现</h2>
+<h3 id="heading1">监听端口</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">StartServer</span>() {
+	<span style="color:#a6e22e">server</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Listen</span>(<span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s:%d&#34;</span>, <span style="color:#a6e22e">settings</span>.<span style="color:#a6e22e">AppConfig</span>.<span style="color:#a6e22e">ServerIP</span>, <span style="color:#a6e22e">settings</span>.<span style="color:#a6e22e">AppConfig</span>.<span style="color:#a6e22e">ServerPort</span>))
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		panic(<span style="color:#a6e22e">err</span>)
+	}
+	<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;InitServer success.[server]=%#v&#34;</span>, <span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">Addr</span>().<span style="color:#a6e22e">String</span>())
+	<span style="color:#66d9ef">for</span> {
+		<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">Accept</span>()
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">ne</span>, <span style="color:#a6e22e">ok</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">err</span>.(<span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Error</span>); <span style="color:#a6e22e">ok</span> <span style="color:#f92672">&amp;&amp;</span> <span style="color:#a6e22e">ne</span>.<span style="color:#a6e22e">Temporary</span>() {
+				<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;InitServer accept temp fail.[err]=%#v&#34;</span>, <span style="color:#a6e22e">ne</span>.<span style="color:#a6e22e">Error</span>())
+				<span style="color:#66d9ef">continue</span>
+			}
+			<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;InitServer accept err.[err]=%#v&#34;</span>, <span style="color:#a6e22e">err</span>)
+			panic(<span style="color:#a6e22e">err</span>)
+		}
+		<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">engine</span>.<span style="color:#a6e22e">HandleProxyConnect</span>(<span style="color:#a6e22e">conn</span>)
+	}
+}
+</code></pre></div><h3 id="heading2">处理连接&amp;转发数据</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">HandleProxyConnect</span>(<span style="color:#a6e22e">conn</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Close</span>()
+	<span style="color:#a6e22e">proxyConn</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">createProxyConn</span>()
+	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+		<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;HandleProxyConnect loadProxyConn fail.[err]=%#v&#34;</span>, <span style="color:#a6e22e">err</span>)
+		<span style="color:#66d9ef">return</span>
+	}
+	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">proxyConn</span>.<span style="color:#a6e22e">Close</span>()
+	<span style="color:#a6e22e">wg</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">utils</span>.<span style="color:#a6e22e">WaitWrapper</span>{}
+	<span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wrap</span>(<span style="color:#66d9ef">func</span>() {
+		<span style="color:#a6e22e">copySocketData</span>(<span style="color:#a6e22e">conn</span>, <span style="color:#a6e22e">proxyConn</span>)
+	})
+	<span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wrap</span>(<span style="color:#66d9ef">func</span>() {
+		<span style="color:#a6e22e">copySocketData</span>(<span style="color:#a6e22e">proxyConn</span>, <span style="color:#a6e22e">conn</span>)
+	})
+	<span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wait</span>()
+	<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;HandleProxyConnect complete.[source]=%#v [proxy]=%#v&#34;</span>, <span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">proxyConn</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>())
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">copySocketData</span>(<span style="color:#a6e22e">src</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>, <span style="color:#a6e22e">dst</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
+	<span style="color:#a6e22e">buf</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">byte</span>, <span style="color:#a6e22e">BufSize</span>)
+	<span style="color:#66d9ef">for</span> {
+		<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">src</span>.<span style="color:#a6e22e">SetReadDeadline</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">10</span>))
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Warn</span>(<span style="color:#e6db74">&#34;copySocketData SetReadDeadline fail.[err]=%#v&#34;</span>, <span style="color:#a6e22e">err</span>)
+		}
+		<span style="color:#a6e22e">readSize</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">src</span>.<span style="color:#a6e22e">Read</span>(<span style="color:#a6e22e">buf</span>)
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">EOF</span> {
+				<span style="color:#66d9ef">return</span>
+			} <span style="color:#66d9ef">else</span> {
+				<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;copySocketData read fail.[src]=%#v [dst]=%#v [err]=%#v&#34;</span>, <span style="color:#a6e22e">src</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+				<span style="color:#66d9ef">return</span>
+			}
+		}
+		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">readSize</span> &gt; <span style="color:#ae81ff">0</span> {
+			<span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">SetWriteDeadline</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>().<span style="color:#a6e22e">Add</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span> <span style="color:#f92672">*</span> <span style="color:#ae81ff">10</span>))
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+				<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Warn</span>(<span style="color:#e6db74">&#34;copySocketData SetWriteDeadline fail.[err]=%#v&#34;</span>, <span style="color:#a6e22e">err</span>)
+			}
+			<span style="color:#a6e22e">writeSize</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">buf</span>[<span style="color:#ae81ff">0</span>:<span style="color:#a6e22e">readSize</span>])
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+				<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;copySocketData write fail.[src]=%#v [dst]=%#v [err]=%#v&#34;</span>, <span style="color:#a6e22e">src</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+				<span style="color:#66d9ef">return</span>
+			}
+			<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">writeSize</span> <span style="color:#f92672">!=</span> <span style="color:#a6e22e">readSize</span> {
+				<span style="color:#a6e22e">logs</span>.<span style="color:#a6e22e">Info</span>(<span style="color:#e6db74">&#34;copySocketData write size not equal.[src]=%#v [dst]=%#v [err]=%#v&#34;</span>, <span style="color:#a6e22e">src</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">dst</span>.<span style="color:#a6e22e">RemoteAddr</span>().<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+				<span style="color:#66d9ef">return</span>
+			}
+		}
+	}
+}
+</code></pre></div><h3 id="heading3">使用示例</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Python" data-lang="Python"><span style="color:#f92672">import</span> requests
+
+proxies <span style="color:#f92672">=</span> {
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">http</span><span style="color:#e6db74">&#39;</span>: <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">http://127.0.0.1:8080</span><span style="color:#e6db74">&#39;</span>,
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">https</span><span style="color:#e6db74">&#39;</span>: <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">http://127.0.0.1:8080</span><span style="color:#e6db74">&#39;</span>,
+}
+
+url <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">http://pv.sohu.com/cityjson</span><span style="color:#e6db74">&#39;</span>
+html <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url, proxies<span style="color:#f92672">=</span>proxies,timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>)<span style="color:#f92672">.</span>text
+<span style="color:#66d9ef">print</span>(html)
+</code></pre></div><h3 id="heading4">完整代码</h3>
+<p>Github：<a href="https://github.com/Nyloner/proxypool">https://github.com/Nyloner/proxypool</a></p>
+</div>
+        <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://www.nyloner.cn/tags/proxy/">Proxy</a>
+                
+                <a href="https://www.nyloner.cn/tags/go/">Go</a>
+                
+              </span>
+            </div>
+          </div>
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://zeuk.me">Designed by Zeuk,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>做自己喜欢的事，爱自己喜欢的人，成就想成为的自己。</span>
+  </div>
+</footer>
+
+
+
+<script src="https://www.nyloner.cn/js/jquery-3.3.1.min.js"></script>
+<script src="https://www.nyloner.cn/js/zozo.js"></script>
+<script src="https://www.nyloner.cn/js/highlight.pack.js"></script>
+<link  href="https://www.nyloner.cn/css/fancybox.min.css" rel="stylesheet">
+<script src="https://www.nyloner.cn/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>
