@@ -95,6 +95,39 @@
 
 <div class="post animated fadeInDown">
   <div class="post_title">
+    <h2><a href='/posts/2016_12_12_1/'>C语言实现一个简单的HTTP Server</a></h2>
+  </div>
+  
+  <div class="list">
+    <div class="post_content markdown">
+      <p>监听HTTP请求并解析报文,实现一个HelloWorld。 1.实现 server.h #include &lt;stdio.h&gt;#include &lt;sys/types.h&gt;#include &lt;pthread.h&gt;#include &lt;sys/socket.h&gt;#include &lt;arpa/inet.h&gt;#include &lt;netinet/in.h&gt;#include &lt;stdlib.h&gt;#include &lt;string.h&gt;#include &lt;unistd.h&gt;#include &lt;stdarg.h&gt;#include &lt;signal.h&gt; #define SERVER_PORT 8000 struct SocketArg { intptr_t client_sock; char * ip_address; }; struct KeyValue { char *name; char *value; struct KeyValue *next; }; struct Request { int client; char method[5]; char path[80]; struct KeyValue *post_arg; struct KeyValue *request_arg; struct KeyValue *headers; }; void init_server(); void parser_request(void *arg); int get_line(int client,char *buf,int size); struct KeyValue......</p>
+    </div>
+  </div>
+  
+  <div class="post_footer">
+    <div class="meta">
+      <div class="info">
+        <span class="field">
+          <i class="remixicon-map-pin-time-line"></i>
+          <span class="date">2016.12.12</span>
+        </span>
+        
+        <span class="field tags">
+          <i class="remixicon-stack-line"></i>
+          
+          <a href="https://www.nyloner.cn/tags/c/">C</a>
+          
+          <a href="https://www.nyloner.cn/tags/http/">HTTP</a>
+          
+        </span>
+        
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="post animated fadeInDown">
+  <div class="post_title">
     <h2><a href='/posts/2016_09_12_1/'>Python编写自己的抓包工具</a></h2>
   </div>
   

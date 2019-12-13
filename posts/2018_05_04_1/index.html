@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-cn" >
+<head>
+  <meta charset="utf-8"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+
+  
+  <meta name="author"
+        content="nyloner"/>
+
+  
+  <meta name="description" content="TensorFlow-ESPCN 超分辨率技术（Super-Resolution）是指从观测到的低分辨率图像重建出相应的高分辨率图像，是计算机视觉领域中的一个非常经典问题，在军事、医学、公共安全、计算机视觉等方面都有着重要的应用前景"/>
+  
+
+  
+  
+  <meta name="keywords" content="分享, 编程, Go"/>
+  
+
+  
+  <link rel="canonical" href="https://www.nyloner.cn/posts/2018_05_04_1/"/>
+
+  
+
+  <title>基于卷积神经网络的图像超分辨率重建 &middot; 零度</title>
+
+  <link rel="shortcut icon" href="https://www.nyloner.cn/images/favicon.ico"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/animate.min.css"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/remixicon.css"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/zozo.css"/>
+  <link rel="stylesheet" href="https://www.nyloner.cn/css/highlight.css"/>
+
+  
+  
+</head>
+
+<body>
+<div class="main animated">
+  <div class="nav_container animated fadeInDown">
+  <div class="site_nav" id="site_nav">
+    <ul>
+      
+      <li>
+        <a href="/">首页</a>
+      </li>
+      
+      <li>
+        <a href="/posts/">归档</a>
+      </li>
+      
+      <li>
+        <a href="/tags/">标签</a>
+      </li>
+      
+      <li>
+        <a href="/about/">关于</a>
+      </li>
+      
+    </ul>
+  </div>
+  <div class="menu_icon">
+    <a id="menu_icon"><i class="remixicon-links-line"></i></a>
+  </div>
+</div>
+
+  <div class="header animated fadeInDown">
+  <div class="site_title_container">
+    <div class="site_title">
+      <h1>
+        <a href="https://www.nyloner.cn">
+          <span>零度</span>
+          <img src="https://www.nyloner.cn/images/logo.svg"/>
+        </a>
+      </h1>
+    </div>
+    <div class="description">
+      <p class="sub_title"></p>
+      <div class="my_socials">
+        
+        
+        <a href="https://github.com/Nyloner/" title="github" target="_blank"><i class="remixicon-github-fill"></i></a>
+        
+        
+        <a href="https://www.nyloner.cn/index.xml" type="application/rss+xml" title="rss" target="_blank"><i class="remixicon-rss-fill"></i></a>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="content">
+    <div class="post_page">
+      <div class="post animated fadeInDown">
+        <div class="post_title post_detail_title">
+          <h2><a href='/posts/2018_05_04_1/'>基于卷积神经网络的图像超分辨率重建</a></h2>
+          <span class="date">2018.05.04</span>
+        </div>
+        <div class="post_content markdown"><h1 id="tensorflowespcn">TensorFlow-ESPCN</h1>
+<p>超分辨率技术（Super-Resolution）是指从观测到的低分辨率图像重建出相应的高分辨率图像，是计算机视觉领域中的一个非常经典问题，在军事、医学、公共安全、计算机视觉等方面都有着重要的应用前景和应用价值。</p>
+<p>本文采用ESPCN(Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel
+Convolutional Neural Network，CVPR 2016)算法，基于TensorFlow实现图像超分辨率重建。</p>
+<h2 id="espcn">ESPCN</h2>
+<p>ESPCN是一种在低分辨率图像上直接计算卷积得到高分辨率图像的高效率方法，如下图所示，网络的输入是原始的低分辨率图像，通过三个卷积操作后，得到的特征图像大小与输入图像一样，但是特征通道为r^2(r是图像的目标放大倍数)，再经过最后PS操作，将每个像素的r^2个通道重新排列成一个r x r的区域，对应于高分辨率图像中的一个r x r大小的子块，从而大小为r^2 x H x W的特征图像被重新排列成1 x rH x rW大小的高分辨率图像。</p>
+<p><img src="/images/ESPCN%E5%8E%9F%E7%90%86.jpg" alt="proxy_image"></p>
+<h3 id="heading">网络结构</h3>
+<ul>
+<li>
+<p>第一层卷积网络：输入(lr image) height * width * image_channel，filter size 为 5 * 5 ，深度为 64，输出为 height * width * 64</p>
+</li>
+<li>
+<p>第二层卷积网络：输入 height * width * 64，filter size 为 3 * 3，深度为 32，输出为 height * width * 32</p>
+</li>
+<li>
+<p>第三层亚像素卷积层：输入 height * width * 32，filter size 为 3 * 3，深度为 r * r * image_channel，卷积操作输出为 height * width * (r * r * image_channel)，最后再经过PS重排，输出 (r * height) * (width * r) * image_channel</p>
+</li>
+</ul>
+<p>TensorFlow 实现</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Python" data-lang="Python"><span style="color:#75715e"># 第一层卷积，filter size 5*5*64</span>
+<span style="color:#75715e"># input image_height*image_width*image_channel</span>
+<span style="color:#75715e"># output image_height*image_width*64</span>
+<span style="color:#66d9ef">with</span> tf<span style="color:#f92672">.</span>variable_scope(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">layer1-conv1</span><span style="color:#e6db74">&#39;</span>):
+    conv1_weights <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>get_variable(
+        <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">weights</span><span style="color:#e6db74">&#39;</span>,
+        shape<span style="color:#f92672">=</span>[<span style="color:#ae81ff">5</span>, <span style="color:#ae81ff">5</span>, self<span style="color:#f92672">.</span>image_channel, <span style="color:#ae81ff">64</span>],
+        initializer<span style="color:#f92672">=</span>tf<span style="color:#f92672">.</span>truncated_normal_initializer(
+            stddev<span style="color:#f92672">=</span>np<span style="color:#f92672">.</span>sqrt(<span style="color:#ae81ff">2.0</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">25</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">3</span>))
+    )
+    conv1_bias <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>get_variable(
+        <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">bias</span><span style="color:#e6db74">&#39;</span>,
+        shape<span style="color:#f92672">=</span>[<span style="color:#ae81ff">64</span>],
+        initializer<span style="color:#f92672">=</span>tf<span style="color:#f92672">.</span>constant_initializer(<span style="color:#ae81ff">0.0</span>)
+    )
+    conv1_temp <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>bias_add(tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>conv2d(
+        self<span style="color:#f92672">.</span>images, conv1_weights, strides<span style="color:#f92672">=</span>[<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>], padding<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">SAME</span><span style="color:#e6db74">&#39;</span>), conv1_bias)
+    conv1 <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>tanh(conv1_temp)
+
+<span style="color:#75715e"># 第二层卷积，filter size 3*3*32</span>
+<span style="color:#75715e"># input image_height*image_width*64</span>
+<span style="color:#75715e"># output image_height*image_width*32</span>
+<span style="color:#66d9ef">with</span> tf<span style="color:#f92672">.</span>variable_scope(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">layer2-conv2</span><span style="color:#e6db74">&#39;</span>):
+    conv2_weights <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>get_variable(
+        <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">weights</span><span style="color:#e6db74">&#39;</span>,
+        shape<span style="color:#f92672">=</span>[<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">64</span>, <span style="color:#ae81ff">32</span>],
+        initializer<span style="color:#f92672">=</span>tf<span style="color:#f92672">.</span>truncated_normal_initializer(
+            stddev<span style="color:#f92672">=</span>np<span style="color:#f92672">.</span>sqrt(<span style="color:#ae81ff">2.0</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">9</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">64</span>))
+    )
+    conv2_bias <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>get_variable(
+        <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">bias</span><span style="color:#e6db74">&#39;</span>,
+        shape<span style="color:#f92672">=</span>[<span style="color:#ae81ff">32</span>],
+        initializer<span style="color:#f92672">=</span>tf<span style="color:#f92672">.</span>constant_initializer(<span style="color:#ae81ff">0.0</span>)
+    )
+    conv2_temp <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>bias_add(tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>conv2d(
+        conv1, conv2_weights, strides<span style="color:#f92672">=</span>[<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>], padding<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">SAME</span><span style="color:#e6db74">&#39;</span>), conv2_bias)
+    conv2 <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>tanh(conv2_temp)
+
+<span style="color:#75715e"># 第三层卷积，filter size 3*3*ratio*ratio*image_channel</span>
+<span style="color:#75715e"># input image_height*image_width*32</span>
+<span style="color:#75715e"># output image_height*image_width*ratio*ratio*image_channel</span>
+<span style="color:#66d9ef">with</span> tf<span style="color:#f92672">.</span>variable_scope(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">layer3-conv3</span><span style="color:#e6db74">&#39;</span>):
+    conv3_weights <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>get_variable(
+        <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">weights</span><span style="color:#e6db74">&#39;</span>,
+        shape<span style="color:#f92672">=</span>[<span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">32</span>,
+                self<span style="color:#f92672">.</span>ratio <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>ratio <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>image_channel],
+        initializer<span style="color:#f92672">=</span>tf<span style="color:#f92672">.</span>truncated_normal_initializer(
+            stddev<span style="color:#f92672">=</span>np<span style="color:#f92672">.</span>sqrt(<span style="color:#ae81ff">2.0</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">9</span> <span style="color:#f92672">/</span> <span style="color:#ae81ff">32</span>))
+    )
+    conv3_bias <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>get_variable(
+        <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">bias</span><span style="color:#e6db74">&#39;</span>,
+        shape<span style="color:#f92672">=</span>[self<span style="color:#f92672">.</span>ratio <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>ratio <span style="color:#f92672">*</span> self<span style="color:#f92672">.</span>image_channel],
+        initializer<span style="color:#f92672">=</span>tf<span style="color:#f92672">.</span>constant_initializer(<span style="color:#ae81ff">0.0</span>)
+    )
+    conv3 <span style="color:#f92672">=</span> tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>bias_add(tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>conv2d(
+        conv2, conv3_weights, strides<span style="color:#f92672">=</span>[<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">1</span>], padding<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">SAME</span><span style="color:#e6db74">&#39;</span>), conv3_bias)
+
+<span style="color:#75715e"># output (image_height*ratio)*(image_width*ratio)*image_channel</span>
+<span style="color:#66d9ef">return</span> tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>tanh(self<span style="color:#f92672">.</span>PS(conv3, self<span style="color:#f92672">.</span>ratio))
+</code></pre></div><p>ESPCN代码实现：<a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py</a></p>
+<h2 id="heading1">训练模型</h2>
+<h3 id="heading2">准备训练数据</h3>
+<p>将大图裁剪为 17 * 17 大小的子图像集</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Python" data-lang="Python">RATIO <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>  <span style="color:#75715e"># 放大比例</span>
+IMAGE_SIZE <span style="color:#f92672">=</span> <span style="color:#ae81ff">17</span>  <span style="color:#75715e"># 训练图片大小</span>
+STRIDE <span style="color:#f92672">=</span> <span style="color:#ae81ff">8</span>  <span style="color:#75715e"># 裁剪步长</span>
+IMAGE_CHANNEl <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>  <span style="color:#75715e"># 图片通道</span>
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">preprocess_img</span>(file_path):
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;&#34;&#34;</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    处理图片</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    :param file_path:</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    :return:</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    </span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+    img <span style="color:#f92672">=</span> Image<span style="color:#f92672">.</span>open(file_path)
+    <span style="color:#75715e"># 缩放为 RATIO 的整数倍</span>
+    img_label <span style="color:#f92672">=</span> img<span style="color:#f92672">.</span>resize(
+        ((img<span style="color:#f92672">.</span>size[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">/</span><span style="color:#f92672">/</span> RATIO) <span style="color:#f92672">*</span> RATIO, (img<span style="color:#f92672">.</span>size[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">/</span><span style="color:#f92672">/</span> RATIO) <span style="color:#f92672">*</span> RATIO))
+    img_input <span style="color:#f92672">=</span> img_label<span style="color:#f92672">.</span>resize(
+        (img_label<span style="color:#f92672">.</span>size[<span style="color:#ae81ff">0</span>] <span style="color:#f92672">/</span><span style="color:#f92672">/</span> RATIO, img_label<span style="color:#f92672">.</span>size[<span style="color:#ae81ff">1</span>] <span style="color:#f92672">/</span><span style="color:#f92672">/</span> RATIO))
+    <span style="color:#66d9ef">return</span> np<span style="color:#f92672">.</span>asarray(img_input), np<span style="color:#f92672">.</span>asarray(img_label)
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">make_sub_data</span>(img_list):
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;&#34;&#34;</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    将大图裁剪为小图</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    :param img_list:</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    :return:</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    </span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+    sub_input_sequence <span style="color:#f92672">=</span> []
+    sub_label_sequence <span style="color:#f92672">=</span> []
+    <span style="color:#66d9ef">for</span> file_path <span style="color:#f92672">in</span> img_list:
+        input_, label_ <span style="color:#f92672">=</span> preprocess_img(file_path)
+        h, w, c <span style="color:#f92672">=</span> input_<span style="color:#f92672">.</span>shape
+        <span style="color:#66d9ef">if</span> c <span style="color:#f92672">!=</span> IMAGE_CHANNEl:
+            <span style="color:#66d9ef">continue</span>
+        <span style="color:#75715e"># 裁剪图片</span>
+        <span style="color:#66d9ef">for</span> x <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, h <span style="color:#f92672">-</span> IMAGE_SIZE <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, STRIDE):
+            <span style="color:#66d9ef">for</span> y <span style="color:#f92672">in</span> range(<span style="color:#ae81ff">0</span>, w <span style="color:#f92672">-</span> IMAGE_SIZE <span style="color:#f92672">+</span> <span style="color:#ae81ff">1</span>, STRIDE):
+                <span style="color:#75715e"># input</span>
+                sub_input <span style="color:#f92672">=</span> input_[x: x <span style="color:#f92672">+</span> IMAGE_SIZE,
+                            y: y <span style="color:#f92672">+</span> IMAGE_SIZE]
+                sub_input <span style="color:#f92672">=</span> sub_input<span style="color:#f92672">.</span>reshape(
+                    [IMAGE_SIZE, IMAGE_SIZE, IMAGE_CHANNEl])
+                sub_input <span style="color:#f92672">=</span> sub_input <span style="color:#f92672">/</span> <span style="color:#ae81ff">255.0</span>
+                sub_input_sequence<span style="color:#f92672">.</span>append(sub_input)
+
+                <span style="color:#75715e"># label</span>
+                label_x <span style="color:#f92672">=</span> x <span style="color:#f92672">*</span> RATIO
+                label_y <span style="color:#f92672">=</span> y <span style="color:#f92672">*</span> RATIO
+                sub_label <span style="color:#f92672">=</span> label_[label_x: label_x <span style="color:#f92672">+</span> IMAGE_SIZE <span style="color:#f92672">*</span> RATIO,
+                            label_y: label_y <span style="color:#f92672">+</span> IMAGE_SIZE <span style="color:#f92672">*</span> RATIO]
+                sub_label <span style="color:#f92672">=</span> sub_label<span style="color:#f92672">.</span>reshape(
+                    [IMAGE_SIZE <span style="color:#f92672">*</span> RATIO, IMAGE_SIZE <span style="color:#f92672">*</span> RATIO, IMAGE_CHANNEl])
+                sub_label <span style="color:#f92672">=</span> sub_label <span style="color:#f92672">/</span> <span style="color:#ae81ff">255.0</span>
+                sub_label_sequence<span style="color:#f92672">.</span>append(sub_label)
+
+    <span style="color:#66d9ef">return</span> sub_input_sequence, sub_label_sequence
+</code></pre></div><p>将处理后的数据保存为HDF5(一种针对大量数据进行组织和存储的文件格式)格式</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Python" data-lang="Python"><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">make_data_hf</span>(input_, label_):
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;&#34;&#34;</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    保存训练数据</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    </span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+    checkpoint_dir <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">checkpoint</span><span style="color:#e6db74">&#39;</span>
+    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>isdir(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(os<span style="color:#f92672">.</span>getcwd(), checkpoint_dir)):
+        os<span style="color:#f92672">.</span>makedirs(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(os<span style="color:#f92672">.</span>getcwd(), checkpoint_dir))
+    savepath <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(
+        os<span style="color:#f92672">.</span>getcwd(), checkpoint_dir <span style="color:#f92672">+</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">/train_data.h5</span><span style="color:#e6db74">&#39;</span>)
+    <span style="color:#66d9ef">with</span> h5py<span style="color:#f92672">.</span>File(savepath, <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">w</span><span style="color:#e6db74">&#39;</span>) <span style="color:#66d9ef">as</span> hf:
+        hf<span style="color:#f92672">.</span>create_dataset(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">input</span><span style="color:#e6db74">&#39;</span>, data<span style="color:#f92672">=</span>input_)
+        hf<span style="color:#f92672">.</span>create_dataset(<span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">label</span><span style="color:#e6db74">&#39;</span>, data<span style="color:#f92672">=</span>label_)
+
+
+<span style="color:#66d9ef">def</span> <span style="color:#a6e22e">prepare_data</span>(dataset<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">images</span><span style="color:#e6db74">&#39;</span>):
+    <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;&#34;&#34;</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    :param dataset:</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    :return:</span><span style="color:#e6db74">
+</span><span style="color:#e6db74"></span><span style="color:#e6db74">    </span><span style="color:#e6db74">&#34;&#34;&#34;</span>
+    data_dir <span style="color:#f92672">=</span> os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(os<span style="color:#f92672">.</span>getcwd(), dataset)
+    <span style="color:#75715e"># 获取文件夹中的图片</span>
+    filenames <span style="color:#f92672">=</span> glob<span style="color:#f92672">.</span>glob(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(data_dir, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">*.jpg</span><span style="color:#e6db74">&#34;</span>))
+    filenames <span style="color:#f92672">+</span><span style="color:#f92672">=</span> glob<span style="color:#f92672">.</span>glob(os<span style="color:#f92672">.</span>path<span style="color:#f92672">.</span>join(data_dir, <span style="color:#e6db74"></span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">*.jpeg</span><span style="color:#e6db74">&#34;</span>))
+
+    <span style="color:#75715e"># 裁剪图片</span>
+    sub_input_sequence, sub_label_sequence <span style="color:#f92672">=</span> make_sub_data(filenames)
+
+    arrinput <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>asarray(sub_input_sequence)
+    arrlabel <span style="color:#f92672">=</span> np<span style="color:#f92672">.</span>asarray(sub_label_sequence)
+    <span style="color:#75715e"># 保存为HDF5文件</span>
+    make_data_hf(arrinput, arrlabel)
+</code></pre></div><p>数据处理代码：<a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/prepare_data.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/prepare_data.py</a></p>
+<h3 id="heading3">训练</h3>
+<p>训练代码：
+<a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py</a>
+<a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/train.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/train.py</a></p>
+<h2 id="heading4">重建</h2>
+<h3 id="heading5">重建效果</h3>
+<ul>
+<li>LR Image</li>
+</ul>
+<p><img src="/images/lr_image.jpg" alt="lr_image"></p>
+<ul>
+<li>HR Image</li>
+</ul>
+<p><img src="/images/hr_image.jpg" alt="lr_image"></p>
+<ul>
+<li>SR Image</li>
+</ul>
+<p><img src="/images/sr_image.jpg" alt="lr_image"></p>
+</div>
+        <div class="post_footer">
+          
+        </div>
+      </div>
+      
+      
+    </div>
+  </div>
+  <a id="back_to_top" href="#" class="back_to_top"><span>△</span></a>
+</div>
+<footer class="footer">
+  <div class="powered_by">
+    <a href="https://zeuk.me">Designed by Zeuk,</a>
+    <a href="http://www.gohugo.io/">Proudly published with Hugo</a>
+  </div>
+
+  <div class="footer_slogan">
+    <span>做自己喜欢的事，爱自己喜欢的人，成就想成为的自己。</span>
+  </div>
+</footer>
+
+
+
+<script src="https://www.nyloner.cn/js/jquery-3.3.1.min.js"></script>
+<script src="https://www.nyloner.cn/js/zozo.js"></script>
+<script src="https://www.nyloner.cn/js/highlight.pack.js"></script>
+<link  href="https://www.nyloner.cn/css/fancybox.min.css" rel="stylesheet">
+<script src="https://www.nyloner.cn/js/fancybox.min.js"></script>
+
+<script>hljs.initHighlightingOnLoad()</script>
+
+
+  <script type="text/javascript" async src="https://cdn.bootcss.com/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [['$','$'], ['\\(','\\)']],
+    displayMath: [['$$','$$'], ['\[\[','\]\]']],
+    processEscapes: true,
+    processEnvironments: true,
+    skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+    TeX: { equationNumbers: { autoNumber: "AMS" },
+         extensions: ["AMSmath.js", "AMSsymbols.js"] }
+  }
+});
+
+MathJax.Hub.Queue(function() {
+    
+    
+    
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i = 0; i < all.length; i += 1) {
+        all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+});
+</script>
+
+<style>
+code.has-jax {
+    font: inherit;
+    font-size: 100%;
+    background: inherit;
+    border: inherit;
+    color: #515151;
+}
+</style>
+
+
+
+
+
+
+</body>
+</html>
