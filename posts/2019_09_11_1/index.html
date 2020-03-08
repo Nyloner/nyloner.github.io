@@ -10,7 +10,7 @@
         content="nyloner"/>
 
   
-  <meta name="description" content="关于我 帝都小码农一枚，毕业于华中某男子职业技术学院，现就职于北京某公司广告系统。 关于博客 看过的、做过的、经历过的太多，清晰地刻在记忆里的很少，仅以此博客作为找寻记忆碎片的地图。"/>
+  <meta name="description" content="安装插件 首选安装Golang插件，然后安装工具包 Mac下快捷键：command&#43;shift&#43;P，然后键入：go:install/update tools，将所有 16 个插件都勾选上，然后点击 Enter开始安"/>
   
 
   
@@ -19,11 +19,11 @@
   
 
   
-  <link rel="canonical" href="https://www.nyloner.cn/about/"/>
+  <link rel="canonical" href="https://www.nyloner.cn/posts/2019_09_11_1/"/>
 
   
 
-  <title>About &middot; 零度</title>
+  <title>vscode配置Go编程环境 &middot; 零度</title>
 
   <link rel="shortcut icon" href="https://www.nyloner.cn/images/favicon.ico"/>
   <link rel="stylesheet" href="https://www.nyloner.cn/css/animate.min.css"/>
@@ -92,15 +92,40 @@
     <div class="post_page">
       <div class="post animated fadeInDown">
         <div class="post_title post_detail_title">
-          <h2><a href='/about/'>About</a></h2>
-          <span class="date">2019.12.12</span>
+          <h2><a href='/posts/2019_09_11_1/'>vscode配置Go编程环境</a></h2>
+          <span class="date">2019.09.11</span>
         </div>
-        <div class="post_content markdown"><h2 id="heading">关于我</h2>
-<p>帝都小码农一枚，毕业于华中某男子职业技术学院，现就职于北京某公司广告系统。</p>
-<h2 id="heading-1">关于博客</h2>
-<p>看过的、做过的、经历过的太多，清晰地刻在记忆里的很少，仅以此博客作为找寻记忆碎片的地图。</p>
-</div>
+        <div class="post_content markdown"><h2 id="heading">安装插件</h2>
+<p>首选安装<code>Golang</code>插件，然后安装工具包
+Mac下快捷键：<code>command+shift+P</code>，然后键入：<code>go:install/update tools</code>，将所有 16 个插件都勾选上，然后点击 <code>Enter</code>开始安装</p>
+<h2 id="heading-1">配置：包括自动补全等</h2>
+<p>编辑<code>setting.json</code>文件，可参考以下配置</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-json" data-lang="json">{
+  <span style="color:#f92672">&#34;go.goroot&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#960050;background-color:#1e0010">/</span><span style="color:#960050;background-color:#1e0010">/</span> <span style="color:#960050;background-color:#1e0010">G</span><span style="color:#960050;background-color:#1e0010">O</span><span style="color:#960050;background-color:#1e0010">R</span><span style="color:#960050;background-color:#1e0010">O</span><span style="color:#960050;background-color:#1e0010">O</span><span style="color:#960050;background-color:#1e0010">T</span>
+  <span style="color:#f92672">&#34;go.gopath&#34;</span>: <span style="color:#e6db74">&#34;&#34;</span>, <span style="color:#960050;background-color:#1e0010">/</span><span style="color:#960050;background-color:#1e0010">/</span> <span style="color:#960050;background-color:#1e0010">G</span><span style="color:#960050;background-color:#1e0010">O</span><span style="color:#960050;background-color:#1e0010">P</span><span style="color:#960050;background-color:#1e0010">A</span><span style="color:#960050;background-color:#1e0010">T</span><span style="color:#960050;background-color:#1e0010">H</span>
+  <span style="color:#f92672">&#34;go.inferGopath&#34;</span>: <span style="color:#66d9ef">true</span>,
+  <span style="color:#f92672">&#34;go.autocompleteUnimportedPackages&#34;</span>: <span style="color:#66d9ef">true</span>,
+  <span style="color:#f92672">&#34;go.gocodePackageLookupMode&#34;</span>: <span style="color:#e6db74">&#34;go&#34;</span>,
+  <span style="color:#f92672">&#34;go.gotoSymbol.includeImports&#34;</span>: <span style="color:#66d9ef">true</span>,
+  <span style="color:#f92672">&#34;go.useCodeSnippetsOnFunctionSuggest&#34;</span>: <span style="color:#66d9ef">true</span>,
+  <span style="color:#f92672">&#34;go.useCodeSnippetsOnFunctionSuggestWithoutType&#34;</span>: <span style="color:#66d9ef">true</span>,
+  <span style="color:#f92672">&#34;go.docsTool&#34;</span>: <span style="color:#e6db74">&#34;gogetdoc&#34;</span>,
+}
+</code></pre></div></div>
         <div class="post_footer">
+          
+          <div class="meta">
+            <div class="info">
+              <span class="field tags">
+                <i class="remixicon-stack-line"></i>
+                
+                <a href="https://www.nyloner.cn/tags/vscode/">VSCode</a>
+                
+                <a href="https://www.nyloner.cn/tags/go/">Go</a>
+                
+              </span>
+            </div>
+          </div>
           
         </div>
       </div>

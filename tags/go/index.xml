@@ -20,5 +20,14 @@
       <description>爬虫开发中，经常会遇到反爬封IP的情况，一些代理网站提供了免费的代理，可用的虽不多，挑挑拣拣勉强能用，购买代理毕竟太贵。 这里实现了一个代理工具，实现方式很简单： 定时爬取不同代理网站中的免费代理，验证可</description>
     </item>
     
+    <item>
+      <title>vscode配置Go编程环境</title>
+      <link>https://www.nyloner.cn/posts/2019_09_11_1/</link>
+      <pubDate>Wed, 11 Sep 2019 17:15:19 +0800</pubDate>
+      
+      <guid>https://www.nyloner.cn/posts/2019_09_11_1/</guid>
+      <description>安装插件 首选安装Golang插件，然后安装工具包 Mac下快捷键：command+shift+P，然后键入：go:install/update tools，将所有 16 个插件都勾选上，然后点击 Enter开始安</description>
+    </item>
+    
   </channel>
 </rss>

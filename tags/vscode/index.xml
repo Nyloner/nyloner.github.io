@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>VSCode on 零度</title>
+    <link>https://www.nyloner.cn/tags/vscode/</link>
+    <description>Recent content in VSCode on 零度</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>zh-cn</language>
+    <lastBuildDate>Wed, 11 Sep 2019 17:15:19 +0800</lastBuildDate>
+    
+	<atom:link href="https://www.nyloner.cn/tags/vscode/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>vscode配置Go编程环境</title>
+      <link>https://www.nyloner.cn/posts/2019_09_11_1/</link>
+      <pubDate>Wed, 11 Sep 2019 17:15:19 +0800</pubDate>
+      
+      <guid>https://www.nyloner.cn/posts/2019_09_11_1/</guid>
+      <description>安装插件 首选安装Golang插件，然后安装工具包 Mac下快捷键：command+shift+P，然后键入：go:install/update tools，将所有 16 个插件都勾选上，然后点击 Enter开始安</description>
+    </item>
+    
+  </channel>
+</rss>

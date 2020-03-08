@@ -95,7 +95,7 @@
           <h2><a href='/posts/2018_05_04_1/'>基于卷积神经网络的图像超分辨率重建</a></h2>
           <span class="date">2018.05.04</span>
         </div>
-        <div class="post_content markdown"><h1 id="tensorflowespcn">TensorFlow-ESPCN</h1>
+        <div class="post_content markdown"><h1 id="tensorflow-espcn">TensorFlow-ESPCN</h1>
 <p>超分辨率技术（Super-Resolution）是指从观测到的低分辨率图像重建出相应的高分辨率图像，是计算机视觉领域中的一个非常经典问题，在军事、医学、公共安全、计算机视觉等方面都有着重要的应用前景和应用价值。</p>
 <p>本文采用ESPCN(Real-Time Single Image and Video Super-Resolution Using an Efficient Sub-Pixel
 Convolutional Neural Network，CVPR 2016)算法，基于TensorFlow实现图像超分辨率重建。</p>
@@ -175,8 +175,8 @@ Convolutional Neural Network，CVPR 2016)算法，基于TensorFlow实现图像�
 <span style="color:#75715e"># output (image_height*ratio)*(image_width*ratio)*image_channel</span>
 <span style="color:#66d9ef">return</span> tf<span style="color:#f92672">.</span>nn<span style="color:#f92672">.</span>tanh(self<span style="color:#f92672">.</span>PS(conv3, self<span style="color:#f92672">.</span>ratio))
 </code></pre></div><p>ESPCN代码实现：<a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py</a></p>
-<h2 id="heading1">训练模型</h2>
-<h3 id="heading2">准备训练数据</h3>
+<h2 id="heading-1">训练模型</h2>
+<h3 id="heading-2">准备训练数据</h3>
 <p>将大图裁剪为 17 * 17 大小的子图像集</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Python" data-lang="Python">RATIO <span style="color:#f92672">=</span> <span style="color:#ae81ff">3</span>  <span style="color:#75715e"># 放大比例</span>
 IMAGE_SIZE <span style="color:#f92672">=</span> <span style="color:#ae81ff">17</span>  <span style="color:#75715e"># 训练图片大小</span>
@@ -265,12 +265,12 @@ IMAGE_CHANNEl <span style="color:#f92672">=</span> <span style="color:#ae81ff">3
     <span style="color:#75715e"># 保存为HDF5文件</span>
     make_data_hf(arrinput, arrlabel)
 </code></pre></div><p>数据处理代码：<a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/prepare_data.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/prepare_data.py</a></p>
-<h3 id="heading3">训练</h3>
+<h3 id="heading-3">训练</h3>
 <p>训练代码：
 <a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/espcn.py</a>
 <a href="https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/train.py">https://github.com/Nyloner/TensorFlow-ESPCN/blob/master/train.py</a></p>
-<h2 id="heading4">重建</h2>
-<h3 id="heading5">重建效果</h3>
+<h2 id="heading-4">重建</h2>
+<h3 id="heading-5">重建效果</h3>
 <ul>
 <li>LR Image</li>
 </ul>
@@ -289,27 +289,6 @@ IMAGE_CHANNEl <span style="color:#f92672">=</span> <span style="color:#ae81ff">3
         </div>
       </div>
       
-      
-      
-<div class="doc_comments">
-  <div class="comments_block_title">发表评论</div>
-  <div id="vcomments"></div>
-</div>
-
-<link rel="stylesheet" href="https://www.nyloner.cn/css/comments.css"/>
-<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='//unpkg.com/valine/dist/Valine.min.js'></script>
-
-<script type="text/javascript">
-new Valine({
-  el: '#vcomments',
-  appId: 'thCeWhcdPnkuVvGvqX8TvFFJ-gzGzoHsz',
-  appKey: 'HJ5xud9CF2oL9eNFBKSNGtFK',
-  placeholder: ' ',
-  visitor: 'true',
-})
-</script>
-
       
     </div>
   </div>

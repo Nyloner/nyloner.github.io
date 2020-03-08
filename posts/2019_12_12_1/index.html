@@ -111,7 +111,7 @@
 <p>流程如下：
 <img src="/images/proxy.jpeg" alt="proxy_image"></p>
 <h2 id="heading">实现</h2>
-<h3 id="heading1">监听端口</h3>
+<h3 id="heading-1">监听端口</h3>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">StartServer</span>() {
 	<span style="color:#a6e22e">server</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Listen</span>(<span style="color:#e6db74">&#34;tcp&#34;</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s:%d&#34;</span>, <span style="color:#a6e22e">settings</span>.<span style="color:#a6e22e">AppConfig</span>.<span style="color:#a6e22e">ServerIP</span>, <span style="color:#a6e22e">settings</span>.<span style="color:#a6e22e">AppConfig</span>.<span style="color:#a6e22e">ServerPort</span>))
 	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
@@ -131,7 +131,7 @@
 		<span style="color:#66d9ef">go</span> <span style="color:#a6e22e">engine</span>.<span style="color:#a6e22e">HandleProxyConnect</span>(<span style="color:#a6e22e">conn</span>)
 	}
 }
-</code></pre></div><h3 id="heading2">处理连接&amp;转发数据</h3>
+</code></pre></div><h3 id="heading-2">处理连接&amp;转发数据</h3>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">HandleProxyConnect</span>(<span style="color:#a6e22e">conn</span> <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">Conn</span>) {
 	<span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">conn</span>.<span style="color:#a6e22e">Close</span>()
 	<span style="color:#a6e22e">proxyConn</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">createProxyConn</span>()
@@ -184,7 +184,7 @@
 		}
 	}
 }
-</code></pre></div><h3 id="heading3">使用示例</h3>
+</code></pre></div><h3 id="heading-3">使用示例</h3>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-Python" data-lang="Python"><span style="color:#f92672">import</span> requests
 
 proxies <span style="color:#f92672">=</span> {
@@ -195,7 +195,7 @@ proxies <span style="color:#f92672">=</span> {
 url <span style="color:#f92672">=</span> <span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">http://pv.sohu.com/cityjson</span><span style="color:#e6db74">&#39;</span>
 html <span style="color:#f92672">=</span> requests<span style="color:#f92672">.</span>get(url, proxies<span style="color:#f92672">=</span>proxies,timeout<span style="color:#f92672">=</span><span style="color:#ae81ff">10</span>)<span style="color:#f92672">.</span>text
 <span style="color:#66d9ef">print</span>(html)
-</code></pre></div><h3 id="heading4">完整代码</h3>
+</code></pre></div><h3 id="heading-4">完整代码</h3>
 <p>Github：<a href="https://github.com/Nyloner/proxypool">https://github.com/Nyloner/proxypool</a></p>
 </div>
         <div class="post_footer">
@@ -216,27 +216,6 @@ html <span style="color:#f92672">=</span> requests<span style="color:#f92672">.<
         </div>
       </div>
       
-      
-      
-<div class="doc_comments">
-  <div class="comments_block_title">发表评论</div>
-  <div id="vcomments"></div>
-</div>
-
-<link rel="stylesheet" href="https://www.nyloner.cn/css/comments.css"/>
-<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='//unpkg.com/valine/dist/Valine.min.js'></script>
-
-<script type="text/javascript">
-new Valine({
-  el: '#vcomments',
-  appId: 'thCeWhcdPnkuVvGvqX8TvFFJ-gzGzoHsz',
-  appKey: 'HJ5xud9CF2oL9eNFBKSNGtFK',
-  placeholder: ' ',
-  visitor: 'true',
-})
-</script>
-
       
     </div>
   </div>

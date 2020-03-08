@@ -124,7 +124,7 @@ verifystr<span style="color:#f92672">+</span><span style="color:#f92672">=</span
 <span style="color:#66d9ef">for</span> index <span style="color:#f92672">in</span> range(len(verifystr)):
     draw<span style="color:#f92672">.</span>text((<span style="color:#ae81ff">10</span><span style="color:#f92672">+</span><span style="color:#ae81ff">20</span><span style="color:#f92672">*</span>index,<span style="color:#ae81ff">10</span>),text<span style="color:#f92672">=</span>verifystr[index],font<span style="color:#f92672">=</span>font,fill<span style="color:#f92672">=</span>randcolor_2())
 img<span style="color:#f92672">=</span>img<span style="color:#f92672">.</span>filter(ImageFilter<span style="color:#f92672">.</span>CONTOUR)<span style="color:#75715e">#模糊</span>
-</code></pre></div><h2 id="heading1">绘制干扰线，干扰点</h2>
+</code></pre></div><h2 id="heading-1">绘制干扰线，干扰点</h2>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">
 <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">create_lines</span>(draw,size):
     line_num<span style="color:#f92672">=</span>random<span style="color:#f92672">.</span>randint(<span style="color:#ae81ff">5</span>,<span style="color:#ae81ff">8</span>)<span style="color:#75715e">#干扰线数目</span>
@@ -170,27 +170,6 @@ img<span style="color:#f92672">=</span>img<span style="color:#f92672">.</span>fi
         </div>
       </div>
       
-      
-      
-<div class="doc_comments">
-  <div class="comments_block_title">发表评论</div>
-  <div id="vcomments"></div>
-</div>
-
-<link rel="stylesheet" href="https://www.nyloner.cn/css/comments.css"/>
-<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='//unpkg.com/valine/dist/Valine.min.js'></script>
-
-<script type="text/javascript">
-new Valine({
-  el: '#vcomments',
-  appId: 'thCeWhcdPnkuVvGvqX8TvFFJ-gzGzoHsz',
-  appKey: 'HJ5xud9CF2oL9eNFBKSNGtFK',
-  placeholder: ' ',
-  visitor: 'true',
-})
-</script>
-
       
     </div>
   </div>

@@ -112,7 +112,7 @@ sniff嗅探到流量包后，会调用回调函数packet_callback，我们可以
         packets<span style="color:#f92672">=</span>sniff(filter<span style="color:#f92672">=</span><span style="color:#e6db74"></span><span style="color:#e6db74">&#39;</span><span style="color:#e6db74">&#39;</span>,prn<span style="color:#f92672">=</span>packet_callback,count<span style="color:#f92672">=</span><span style="color:#ae81ff">10000</span>)
     <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">KeyboardInterrupt</span>:
         <span style="color:#66d9ef">break</span>
-</code></pre></div><h2 id="3packetcallback">3.packet_callback</h2>
+</code></pre></div><h2 id="3packet-callback">3.packet_callback</h2>
 <p>编写packet_callback，提取自己想要的信息</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python">
 <span style="color:#75715e">#获取请求头</span>
@@ -162,27 +162,6 @@ sniff嗅探到流量包后，会调用回调函数packet_callback，我们可以
         </div>
       </div>
       
-      
-      
-<div class="doc_comments">
-  <div class="comments_block_title">发表评论</div>
-  <div id="vcomments"></div>
-</div>
-
-<link rel="stylesheet" href="https://www.nyloner.cn/css/comments.css"/>
-<script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-<script src='//unpkg.com/valine/dist/Valine.min.js'></script>
-
-<script type="text/javascript">
-new Valine({
-  el: '#vcomments',
-  appId: 'thCeWhcdPnkuVvGvqX8TvFFJ-gzGzoHsz',
-  appKey: 'HJ5xud9CF2oL9eNFBKSNGtFK',
-  placeholder: ' ',
-  visitor: 'true',
-})
-</script>
-
       
     </div>
   </div>
